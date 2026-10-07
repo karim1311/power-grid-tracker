@@ -1,13 +1,31 @@
 import React from 'react';
 import { OutageListItem } from '../components/OutageListItem';
+import { getOutages, getOutagesTotalPages } from "@/lib/outages-db";
+import { OutageSearch } from '../components/OutageSearch';
+import { Pagination } from '../components/Pagination';
 
-export default function OutagesList() {
+
+
+export default async function OutagesList(props: {
+  searchParams?: Promise<{ query?: string; page?: string; }>;
+}) {
+
+  const searchParams = await props.searchParams;
+  const query = searchParams?.query ?? '';
+  const currentPage = Number(searchParams?.page)  || 1
+
+  const [outages, totalPages] = await Promise.all([
+      getOutages(query, currentPage),
+      getOutagesTotalPages(query)
+  ]);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Power Outages</h1>
           <p className="text-slate-400">View and filter historical outage records.</p>
+          <OutageSearch />
         </div>
         
         {/* Placeholder for future search/filter bar */}
@@ -39,6 +57,8 @@ export default function OutagesList() {
           status="resolved"
         />
       </div>
+
+      <Pagination totalPages={totalPages} />
     </div>
   );
 }
