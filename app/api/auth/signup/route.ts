@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { sessionOptions } from "@/lib/session";
 import { createUser } from "@/lib/auth";
@@ -59,8 +60,10 @@ export async function POST(request: NextRequest) {
 
     return setSessionCookie(sessionData, response);
   } catch (error: unknown) {
-    const err = error as { code?: string };
-    if (err.code === "P2002") {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
         { status: 409 }

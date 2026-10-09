@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { databaseErrorResponse } from "@/lib/api-error";
 
 export async function GET(
   _request: NextRequest,
@@ -12,20 +13,25 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const outage = await prisma.outage.findFirst({
-    where: { id, userId: session.userId },
-    select: {
-      id: true,
-      startTime: true,
-      endTime: true,
-      duration: true,
-      status: true,
-      note: true,
-      locationId: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  let outage;
+  try {
+    outage = await prisma.outage.findFirst({
+      where: { id, userId: session.userId },
+      select: {
+        id: true,
+        startTime: true,
+        endTime: true,
+        duration: true,
+        status: true,
+        note: true,
+        locationId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  } catch (error) {
+    return databaseErrorResponse("Get outage", "Failed to load outage", error);
+  }
 
   if (!outage) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -44,10 +50,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const existing = await prisma.outage.findUnique({
-    where: { id: outageId },
-    select: { id: true, userId: true, startTime: true, endTime: true },
-  });
+  let existing;
+  try {
+    existing = await prisma.outage.findUnique({
+      where: { id: outageId },
+      select: { id: true, userId: true, startTime: true, endTime: true },
+    });
+  } catch (error) {
+    return databaseErrorResponse("Update outage", "Failed to update outage", error);
+  }
 
   if (!existing || existing.userId !== session.userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -85,8 +96,8 @@ export async function PATCH(
       }
     }
 
-    const effectiveStart = updateData.startTime
-      ? new Date(updateData.startTime as string | Date)
+      const effectiveStart = updateData.startTime
+        ? new Date(updateData.startTime as Date)
       : existing.startTime;
 
     if (end !== undefined && end < effectiveStart) {
@@ -126,11 +137,7 @@ export async function PATCH(
 
     return NextResponse.json({ outage: updated }, { status: 200 });
   } catch (error) {
-    console.error("Update outage error:", error);
-    return NextResponse.json(
-      { error: "Failed to update outage" },
-      { status: 500 }
-    );
+    return databaseErrorResponse("Update outage", "Failed to update outage", error);
   }
 }
 
@@ -144,10 +151,15 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const existing = await prisma.outage.findUnique({
-    where: { id: outageId },
-    select: { id: true, userId: true },
-  });
+  let existing;
+  try {
+    existing = await prisma.outage.findUnique({
+      where: { id: outageId },
+      select: { id: true, userId: true },
+    });
+  } catch (error) {
+    return databaseErrorResponse("Delete outage", "Failed to delete outage", error);
+  }
 
   if (!existing || existing.userId !== session.userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -170,10 +182,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("Delete outage error:", error);
-    return NextResponse.json(
-      { error: "Failed to delete outage" },
-      { status: 500 }
-    );
+    return databaseErrorResponse("Delete outage", "Failed to delete outage", error);
   }
 }

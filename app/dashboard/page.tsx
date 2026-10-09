@@ -42,7 +42,13 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const outages = await getOutages(session.userId);
+  let outages: OutageRow[];
+  try {
+    outages = await getOutages(session.userId);
+  } catch (error) {
+    console.error("Load dashboard outages failed:", error);
+    throw new Error("Unable to load dashboard outages");
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
@@ -60,11 +66,11 @@ export default async function DashboardPage() {
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
-            <CreateOutageForm onCreated={() => {}} />
+            <CreateOutageForm />
           </div>
           <div className="lg:col-span-2">
             <h2 className="text-lg font-semibold mb-4">Your Outages</h2>
-            <OutageList outages={outages} onRefresh={() => {}} />
+            <OutageList outages={outages} />
           </div>
         </div>
       </main>

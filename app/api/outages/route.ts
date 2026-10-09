@@ -1,30 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { databaseErrorResponse } from "@/lib/api-error";
 
-export async function GET(_request: Request) {
+export async function GET() {
   const session = await getSession();
   if (!session?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const outages = await prisma.outage.findMany({
-    where: { userId: session.userId },
-    orderBy: { startTime: "desc" },
-    select: {
-      id: true,
-      startTime: true,
-      endTime: true,
-      duration: true,
-      status: true,
-      note: true,
-      locationId: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  try {
+    const outages = await prisma.outage.findMany({
+      where: { userId: session.userId },
+      orderBy: { startTime: "desc" },
+      select: {
+        id: true,
+        startTime: true,
+        endTime: true,
+        duration: true,
+        status: true,
+        note: true,
+        locationId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
 
-  return NextResponse.json({ outages }, { status: 200 });
+    return NextResponse.json({ outages }, { status: 200 });
+  } catch (error) {
+    return databaseErrorResponse("List outages", "Failed to load outages", error);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -97,10 +102,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ outage }, { status: 201 });
   } catch (error) {
-    console.error("Create outage error:", error);
-    return NextResponse.json(
-      { error: "Failed to create outage" },
-      { status: 500 }
-    );
+    return databaseErrorResponse("Create outage", "Failed to create outage", error);
   }
 }
