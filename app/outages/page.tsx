@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { OutageListItem } from '../components/OutageListItem';
 import Search from '../components/Search';
 import Pagination from '../components/Pagination'; // Import the new Pagination component
@@ -29,7 +30,6 @@ export default function OutagesList() {
         <Search placeholder="Search by location or status..." />
       </div>
 
-      {/* List Container */}
       <div className="flex flex-col gap-4 mt-4">
         <OutageListItem 
           id="outage-1"

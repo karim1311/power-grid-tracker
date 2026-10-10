@@ -7,14 +7,14 @@ interface StatCardProps {
   description?: string;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
+  higherIsBetter?: boolean; // default false: up = red (e.g. more outages)
 }
 
-export const StatCard = ({ title, value, description, trend, trendValue }: StatCardProps) => {
-  // Helper function to set trend colors based on the data
+export const StatCard = ({ title, value, description, trend, trendValue, higherIsBetter = false }: StatCardProps) => {
   const getTrendColor = () => {
-    if (trend === 'up') return 'text-red-400'; // Red for negative trends (e.g., more outages)
-    if (trend === 'down') return 'text-green-400'; // Green for positive trends (e.g., fewer outages)
-    return 'text-slate-400';
+    if (trend === 'neutral' || !trend) return 'text-slate-400';
+    const good = higherIsBetter ? trend === 'up' : trend === 'down';
+    return good ? 'text-green-400' : 'text-red-400';
   };
 
   return (
