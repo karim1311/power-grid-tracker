@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { OutageListItem } from '../components/OutageListItem';
 import Search from '../components/Search';
 import Pagination from '../components/Pagination'; // Import the new Pagination component
