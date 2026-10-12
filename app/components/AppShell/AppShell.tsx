@@ -1,7 +1,17 @@
 import React from 'react';
 import Link from 'next/link';
+import { auth } from '@/auth';
+import { SignOutButton } from '../auth/sign-out-button';
 
-export const AppShell = ({ children }: { children: React.ReactNode }) => {
+
+export const AppShell = async ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0F172A] text-white font-sans">
       {/* Main Header */}
@@ -11,20 +21,31 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
           <span className="text-2xl font-bold text-[#3B82F6]">GridLog</span>
         </div>
         
-        {/* Navigation - Week 02 */}
-        <nav className="hidden md:flex gap-6">
-          <Link href="/dashboard" className="hover:text-[#3B82F6] transition-colors">Dashboard</Link>
-          <Link href="/outages" className="hover:text-[#3B82F6] transition-colors">Outages</Link>
-          <Link href="/profile" className="hover:text-[#3B82F6] transition-colors">Profile</Link>
-        </nav>
+
+        {isLoggedIn && (
+          <nav className="hidden md:flex gap-6">
+            <Link href="/dashboard" className="hover:text-[#3B82F6] transition-colors">Dashboard</Link>
+            <Link href="/outages" className="hover:text-[#3B82F6] transition-colors">Outages</Link>
+            <Link href="/profile" className="hover:text-[#3B82F6] transition-colors">Profile</Link>
+          </nav>
+
+        )}
+
+
         
         <div className="flex gap-4">
-          <Link href="/login" className="px-4 py-2 rounded text-sm font-medium hover:bg-slate-700 transition-colors">
-            Log in
-          </Link>
-          <Link href="/signup" className="px-4 py-2 rounded text-sm font-medium bg-[#3B82F6] hover:bg-blue-600 transition-colors">
-            Sign up
-          </Link>
+          {isLoggedIn ? (
+            <SignOutButton />
+          ): (
+            <>
+              <Link href="/login" className="px-4 py-2 rounded text-sm font-medium hover:bg-slate-700 transition-colors">
+                Log in
+              </Link>
+              <Link href="/signup" className="px-4 py-2 rounded text-sm font-medium bg-[#3B82F6] hover:bg-blue-600 transition-colors">
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
