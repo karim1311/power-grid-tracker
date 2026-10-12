@@ -1,21 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
-import { OutageListItem } from '../components/OutageListItem';
-import { outages, locations } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/currentUser';
-import { formatDateTime } from '@/lib/format';
-import { outageStatus } from '@/lib/types';
+import { OutagesClient } from '../components/OutagesClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OutagesList() {
-  const user = await getCurrentUser();
-  const [outageList, locationList] = await Promise.all([
-    outages.list(user.id),
-    locations.list(user.id),
-  ]);
-  const locationNames = new Map(locationList.map((l) => [l.id, l.name]));
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
@@ -33,20 +22,7 @@ export default async function OutagesList() {
       </div>
 
       <div className="flex flex-col gap-4 mt-4">
-        {outageList.length === 0 ? (
-          <p className="text-slate-500 text-sm">No outages logged yet.</p>
-        ) : (
-          outageList.map((o) => (
-            <OutageListItem
-              key={o.id}
-              id={o.id}
-              locationName={locationNames.get(o.locationId) ?? 'Unknown location'}
-              startTime={formatDateTime(o.startedAt, user.timeZone)}
-              endTime={o.endedAt ? formatDateTime(o.endedAt, user.timeZone) : undefined}
-              status={outageStatus(o) === 'ongoing' ? 'active' : 'resolved'}
-            />
-          ))
-        )}
+        <OutagesClient />
       </div>
     </div>
   );
