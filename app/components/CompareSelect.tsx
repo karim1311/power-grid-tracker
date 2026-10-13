@@ -15,7 +15,7 @@ export function CompareSelect({
       Compare to
       <select
         value={value}
-        onChange={(e) => router.push(`/dashboard?compare=${e.target.value}`, { scroll: false })}
+        onChange={(e) => router.replace(`/dashboard?compare=${e.target.value}`, { scroll: false })}
         className="bg-[#0F172A] border border-slate-600 text-white text-sm rounded-lg p-2"
       >
         {options.map((o) => (

@@ -47,3 +47,20 @@ export function parseLocalDateTime(value: string, timeZone: string): Date | null
   if (o1 !== o2) result = guess - o2; // second pass for DST boundaries
   return new Date(result);
 }
+
+/** "2026-10-09T14:30" in the given IANA time zone, for <input type="datetime-local">. */
+export function toDateTimeLocalValue(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).formatToParts(date);
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  const hour = String(Number(get('hour')) % 24).padStart(2, '0');
+  return `${get('year')}-${get('month')}-${get('day')}T${hour}:${get('minute')}`;
+}

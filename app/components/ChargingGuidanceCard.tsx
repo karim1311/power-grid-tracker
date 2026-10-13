@@ -1,19 +1,19 @@
 import React from 'react';
 
-// Defining props with TypeScript (Week 02)
 interface ChargingGuidanceProps {
   recommendedWindow: string;
   estimatedNextOutage: string;
   actionPriority: 'High' | 'Medium' | 'Low';
+  /** Plain-language explanation of what the advice is based on. */
+  basis?: string;
 }
 
-export const ChargingGuidanceCard = ({ 
-  recommendedWindow, 
-  estimatedNextOutage, 
-  actionPriority 
+export const ChargingGuidanceCard = ({
+  recommendedWindow,
+  estimatedNextOutage,
+  actionPriority,
+  basis,
 }: ChargingGuidanceProps) => {
-  
-  // Dynamic styling based on priority
   const getPriorityColors = () => {
     switch (actionPriority) {
       case 'High':
@@ -41,18 +41,21 @@ export const ChargingGuidanceCard = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
         <div className="bg-[#0F172A]/50 p-4 rounded-lg">
-          <p className="text-xs uppercase tracking-wider opacity-70 mb-1">Recommended Window</p>
+          <p className="text-xs uppercase tracking-wider opacity-70 mb-1">Recommended Charging Window</p>
           <p className="text-xl font-semibold text-white">{recommendedWindow}</p>
         </div>
         <div className="bg-[#0F172A]/50 p-4 rounded-lg">
-          <p className="text-xs uppercase tracking-wider opacity-70 mb-1">Next Est. Outage</p>
+          <p className="text-xs uppercase tracking-wider opacity-70 mb-1">Likely Outage Window</p>
           <p className="text-xl font-semibold text-white">{estimatedNextOutage}</p>
         </div>
       </div>
-      
+
       <p className="text-sm opacity-90 mt-2">
-        Plug in your power stations and UPS units during the recommended window to ensure 100% capacity.
+        Plug in your power stations and UPS units during the charging window so they are full
+        before the likely outage window.
       </p>
+
+      {basis && <p className="text-xs opacity-70">{basis}</p>}
     </div>
   );
 };

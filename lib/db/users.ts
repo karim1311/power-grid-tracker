@@ -47,6 +47,16 @@ export function createUserRepo(db: Queryable) {
       return rows[0] ? mapUser(rows[0]) : null;
     },
 
+    /** Changes the user's IANA time zone. The caller must validate it first. */
+    async updateTimeZone(userId: string, timeZone: string): Promise<boolean> {
+      if (!isUuid(userId)) return false;
+      const { rows } = await db.query(
+        `UPDATE users SET time_zone = $2::text WHERE id = $1::uuid RETURNING id`,
+        [userId, timeZone],
+      );
+      return rows.length > 0;
+    },
+
     /**
      * For login only: returns the user plus their password hash so the caller
      * can verify it. Keep the hash inside the login route; never send it to a client.

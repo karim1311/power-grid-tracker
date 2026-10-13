@@ -6,6 +6,8 @@ import { getCurrentUser } from '@/lib/auth/currentUser';
 import { formatDateTime } from '@/lib/format';
 import { formatDuration } from '@/lib/analytics/daily';
 import { outageStatus, outageDurationMs } from '@/lib/types';
+import { DeleteOutageButton } from '../../components/DeleteOutageButton';
+import { resolveOutage, deleteOutage } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,6 +72,27 @@ export default async function OutageDetailPage({
         </span>
       </div>
 
+      {/* Actions */}
+      <div className="flex flex-wrap items-center gap-3">
+        {ongoing && (
+          <form action={resolveOutage.bind(null, outage.id)}>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Mark as resolved
+            </button>
+          </form>
+        )}
+        <Link
+          href={`/outages/${outage.id}/edit`}
+          className="px-4 py-2 text-sm font-medium text-slate-300 bg-transparent border border-slate-600 rounded-lg hover:bg-slate-700 transition-colors"
+        >
+          Edit
+        </Link>
+        <DeleteOutageButton action={deleteOutage.bind(null, outage.id)} />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Timing */}
         <section className="bg-[#1E293B] rounded-xl border border-slate-700 p-6">
@@ -124,7 +147,6 @@ export default async function OutageDetailPage({
           </ul>
         </section>
       )}
-
     </div>
   );
 }

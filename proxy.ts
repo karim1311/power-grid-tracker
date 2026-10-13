@@ -8,6 +8,7 @@ export const config = {
         '/dashboard/:path*',
         '/outages/:path*',
         '/profile/:path*',
+        '/analytics/:path*',
         '/login',
         '/signup',
     ],

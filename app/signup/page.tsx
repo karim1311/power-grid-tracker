@@ -80,7 +80,7 @@ export default function SignupPage() {
         </div>
 
         {state.error && (
-          <p role="alert" className="red-text-400">{state.error}</p>
+          <p role="alert" className="text-red-400">{state.error}</p>
         )}
 
         <button

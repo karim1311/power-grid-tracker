@@ -15,6 +15,8 @@ export interface ListFilters {
   from?: Date;
   to?: Date;
   status?: 'ongoing' | 'completed' | 'all';
+  /** Matches location name (substring) or a status word (active/ongoing/resolved/completed). */
+  search?: string;
   limit?: number; // default 100, max 500
   offset?: number;
 }
@@ -31,6 +33,43 @@ function mapRow(r: any): Outage {
     note: r.note,
     createdAt: new Date(r.created_at),
   };
+}
+
+const escapeLike = (s: string) => s.replace(/[\\%_]/g, '\\$&');
+
+/** Builds the WHERE clause shared by list() and count(). Returns null if nothing can match. */
+function buildWhere(userId: string, filters: ListFilters) {
+  if (!isUuid(userId)) return null;
+  const where: string[] = ['user_id = $1::uuid'];
+  const params: unknown[] = [userId];
+  const add = (sql: string, value: unknown) => {
+    params.push(value);
+    where.push(sql.replace('?', `$${params.length}`));
+  };
+
+  if (filters.locationId) {
+    if (!isUuid(filters.locationId)) return null;
+    add('location_id = ?::uuid', filters.locationId);
+  }
+  if (filters.from) add('(ended_at IS NULL OR ended_at > ?::timestamptz)', filters.from);
+  if (filters.to) add('started_at < ?::timestamptz', filters.to);
+  if (filters.status === 'ongoing') where.push('ended_at IS NULL');
+  if (filters.status === 'completed') where.push('ended_at IS NOT NULL');
+
+  const term = filters.search?.trim();
+  if (term) {
+    params.push(`%${escapeLike(term)}%`);
+    const p = `$${params.length}`;
+    const clauses = [
+      `location_id IN (SELECT id FROM locations WHERE user_id = $1::uuid AND name ILIKE ${p} ESCAPE '\\')`,
+    ];
+    const lower = term.toLowerCase();
+    if ('active'.startsWith(lower) || 'ongoing'.startsWith(lower)) clauses.push('ended_at IS NULL');
+    if ('resolved'.startsWith(lower) || 'completed'.startsWith(lower)) clauses.push('ended_at IS NOT NULL');
+    where.push(`(${clauses.join(' OR ')})`);
+  }
+
+  return { where, params };
 }
 
 /**
@@ -71,22 +110,9 @@ export function createOutageRepo(db: Queryable) {
     },
 
     async list(userId: string, filters: ListFilters = {}): Promise<Outage[]> {
-      if (!isUuid(userId)) return [];
-      const where: string[] = ['user_id = $1::uuid'];
-      const params: unknown[] = [userId];
-      const add = (sql: string, value: unknown) => {
-        params.push(value);
-        where.push(sql.replace('?', `$${params.length}`));
-      };
-
-      if (filters.locationId) {
-        if (!isUuid(filters.locationId)) return [];
-        add('location_id = ?::uuid', filters.locationId);
-      }
-      if (filters.from) add('(ended_at IS NULL OR ended_at > ?::timestamptz)', filters.from);
-      if (filters.to) add('started_at < ?::timestamptz', filters.to);
-      if (filters.status === 'ongoing') where.push('ended_at IS NULL');
-      if (filters.status === 'completed') where.push('ended_at IS NOT NULL');
+      const built = buildWhere(userId, filters);
+      if (!built) return [];
+      const { where, params } = built;
 
       const limit = Math.min(Math.max(filters.limit ?? 100, 1), 500);
       const offset = Math.max(filters.offset ?? 0, 0);
@@ -100,6 +126,17 @@ export function createOutageRepo(db: Queryable) {
         params,
       );
       return rows.map(mapRow);
+    },
+
+    /** Number of outages matching the same filters as list() (ignores limit/offset). */
+    async count(userId: string, filters: ListFilters = {}): Promise<number> {
+      const built = buildWhere(userId, filters);
+      if (!built) return 0;
+      const { rows } = await db.query(
+        `SELECT COUNT(*)::int AS count FROM outages WHERE ${built.where.join(' AND ')}`,
+        built.params,
+      );
+      return rows[0]?.count ?? 0;
     },
 
     async update(

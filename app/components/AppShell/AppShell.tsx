@@ -2,7 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import { SignOutButton } from '../auth/sign-out-button';
-
+import { MobileMenu } from './MobileMenu';
+import { NAV_LINKS } from './navLinks';
 
 export const AppShell = async ({
   children,
@@ -14,38 +15,48 @@ export const AppShell = async ({
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0F172A] text-white font-sans">
+
       {/* Main Header */}
-      <header className="bg-[#1E293B] px-6 py-4 border-b border-slate-700 flex justify-between items-center shadow-sm">
-        <div className="flex items-center gap-2">
-          {/* Logo / Brand */}
-          <span className="text-2xl font-bold text-[#3B82F6]">GridLog</span>
-        </div>
-        
+      <header className="bg-[#1E293B] border-b border-slate-700 shadow-sm relative z-50">
+        <div className="px-6 py-4 flex justify-between items-center max-w-7xl mx-auto w-full">
 
-        {isLoggedIn && (
-          <nav className="hidden md:flex gap-6">
-            <Link href="/dashboard" className="hover:text-[#3B82F6] transition-colors">Dashboard</Link>
-            <Link href="/outages" className="hover:text-[#3B82F6] transition-colors">Outages</Link>
-            <Link href="/profile" className="hover:text-[#3B82F6] transition-colors">Profile</Link>
-          </nav>
+          <div className="flex items-center gap-2">
+            <Link href="/" className="text-2xl font-bold text-[#3B82F6] hover:text-blue-400 transition-colors">
+              GridLog
+            </Link>
+          </div>
 
-        )}
-
-
-        
-        <div className="flex gap-4">
-          {isLoggedIn ? (
-            <SignOutButton />
-          ): (
-            <>
-              <Link href="/login" className="px-4 py-2 rounded text-sm font-medium hover:bg-slate-700 transition-colors">
-                Log in
-              </Link>
-              <Link href="/signup" className="px-4 py-2 rounded text-sm font-medium bg-[#3B82F6] hover:bg-blue-600 transition-colors">
-                Sign up
-              </Link>
-            </>
+          {/* Desktop Navigation (hidden on mobile) */}
+          {isLoggedIn && (
+            <nav className="hidden md:flex gap-6">
+              {NAV_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} className="hover:text-[#3B82F6] transition-colors">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
           )}
+
+          <div className="flex items-center gap-4">
+            {/* Desktop auth buttons */}
+            <div className="hidden md:flex items-center gap-4">
+              {isLoggedIn ? (
+                <SignOutButton />
+              ) : (
+                <>
+                  <Link href="/login" className="px-4 py-2 rounded text-sm font-medium hover:bg-slate-700 transition-colors">
+                    Log in
+                  </Link>
+                  <Link href="/signup" className="px-4 py-2 rounded text-sm font-medium bg-[#3B82F6] hover:bg-blue-600 transition-colors">
+                    Sign up
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile hamburger + dropdown (client component) */}
+            <MobileMenu isLoggedIn={isLoggedIn} />
+          </div>
         </div>
       </header>
 

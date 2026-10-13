@@ -27,12 +27,12 @@ export async function createOutage(
   const toInstant = (raw: string) =>
     raw === '' ? undefined : (parseLocalDateTime(raw, user.timeZone) ?? raw);
 
-const result = await outages.create(user.id, {
-  locationId,
-  startedAt: toInstant(startTime),
-  endedAt: toInstant(endTime),
-  note,
-});
+  const result = await outages.create(user.id, {
+    locationId,
+    startedAt: toInstant(startTime),
+    endedAt: toInstant(endTime),
+    note,
+  });
 
   if (!result.ok) {
     const errors =
